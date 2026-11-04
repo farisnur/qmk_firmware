@@ -89,7 +89,7 @@ Zdefiniowane jako *encoder map* (zależne od warstwy): QWERTY – lewy przewija,
 Rozdzielczość domyślna (4 impulsy na ząbek) – zmierzona: jeden ząbek = jeden krok. Kierunek lewego poprawiony zamianą pinów A/B (patrz tabela pinów).
 
 ### OLED
-- **Master** (połówka z USB): ikona systemu wykrytego automatycznie (Apple / Windows / Linux / inne), nazwa warstwy, wskaźniki NUMLK / CAPLK / SCRLK.
+- **Master** (połówka z USB): ikona systemu wykrytego automatycznie (Apple / Windows / Linux / inne) – bitmapa 32×32 na całą szerokość ekranu (`os_icons.h`), nazwa warstwy, wskaźniki NUMLK / CAPLK / SCRLK.
   Wykrywanie systemu (`OS_DETECTION`) działa przy podłączeniu i może potrzebować ok. 1 s.
 - **Slave** (druga połówka): animacja chomika w kółku:
   - prędkość kółka i przebierania łapek rośnie z WPM (pełna prędkość ok. 135–150 WPM),
@@ -124,6 +124,7 @@ keyboards/zen2040/
 ├── rules.mk               własny transport OLED (programowe I2C)
 ├── zen2040.c              mapa diod (g_led_config) i ekran statusu mastera
 ├── oled_sw_i2c.c          programowe I2C dla OLED (obejście zamienionych pinów)
+├── os_icons.h             ikony systemów 32×32 dla OLED
 ├── glcdfont.c             font OLED (z ikonami systemów, pochodzi z rgbkb/zen)
 ├── build.sh               buduje oba pliki .uf2
 ├── MAPA_KLAWISZY.md       ściąga z mapą klawiszy
@@ -198,6 +199,7 @@ Po zmianie samej keymapy można wgrywać te same pliki `_left`/`_right` – nic 
 | Ikona złego systemu | Odłącz i podłącz USB – wykrywanie działa tylko przy podłączeniu. |
 | Diody migają / pierwsza dioda dziwnie | RP2040 daje sygnał 3,3 V, a diody działają na 5 V – na granicy tolerancji. Ewentualnie konwerter poziomów lub dioda „poświęcona” jako bufor. |
 | Część diod nie świeci | Sprawdź lutowanie. Dioda z uszkodzonym świeceniem zwykle dalej przekazuje sygnał, więc kolejne świecą. Potwierdź keymapą `ledtest`. |
+| Jasność „skacze” schodkami przy powolnych falach | Diody mają tylko 256 poziomów; w ciemnym zakresie kroki są widoczne. Własne efekty trzymają jasność w górnej połowie zakresu; wbudowane efekty schodzące do ciemności (np. oddychanie) mogą to pokazywać. |
 | Podwójne litery | Drgający przełącznik. Debounce to `sym_defer_pk` 5 ms; można podnieść `DEBOUNCE` lub wymienić przełącznik. |
 | Pokrętło kręci odwrotnie | Zamień `pin_a`/`pin_b` tej połówki w `keyboard.json` (`encoder` = lewa, `split.encoder.right` = prawa). |
 | Firmware nie startuje po wgraniu | Wejdź w bootloader i wgraj ponownie. |

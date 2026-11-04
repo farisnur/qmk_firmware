@@ -53,7 +53,10 @@ static bool ZEN_AURORA(effect_params_t *params) {
 
         uint8_t h = rgb_matrix_config.hsv.h - 48 + scale8(band, 96);
         uint8_t s = qadd8(scale8(rgb_matrix_config.hsv.s, 200), scale8(energy, 55));
-        uint8_t v = qadd8(qadd8(30, scale8(band, 160)), scale8(energy, 65));
+        // Keep brightness in the upper half of the range: WS2812 have only
+        // 8-bit PWM, so slow fades through dark values show visible steps.
+        // The motion comes mostly from the hue shift instead.
+        uint8_t v = qadd8(qadd8(128, scale8(band, 100)), scale8(energy, 27));
         zen_set_hsv(i, h, s, scale8(v, rgb_matrix_config.hsv.v));
     }
     return rgb_matrix_check_finished_leds(led_max);

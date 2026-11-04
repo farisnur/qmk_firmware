@@ -83,6 +83,16 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
+// Chordal Hold: opposite-hands rule for Ent*, but NAV (Caps*) may be held
+// together with keys on its own (left) hand: F1-F6, RGB keys, BOOT.
+bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
+                      uint16_t other_keycode, keyrecord_t *other_record) {
+  if (tap_hold_keycode == LT(_NAV, KC_CAPS)) {
+    return true;
+  }
+  return get_chordal_hold_default(tap_hold_record, other_record);
+}
+
 #ifdef RGB_MATRIX_ENABLE
 // Indicators drawn on top of any effect:
 //  - Caps Lock: Caps key white

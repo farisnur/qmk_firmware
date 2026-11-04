@@ -99,6 +99,12 @@ Rozdzielczość domyślna (4 impulsy na ząbek) – zmierzona: jeden ząbek = je
 - Ekrany gasną po 60 s bez aktywności (`OLED_TIMEOUT`), odświeżanie co 50 ms.
 
 ### Inne
+- **Tap-hold** (`keymaps/default/config.h`): `Ent*` służy też jako Shift do wielkich liter, więc:
+  `PERMISSIVE_HOLD` (klawisz wciśnięty i puszczony w trakcie trzymania `Ent*`/`Caps*` = Shift/NAV, nawet przed 200 ms),
+  `CHORDAL_HOLD` (szybkie `Ent*` + klawisz prawej ręki = Enter, lewej = Shift; `Caps*` z tej reguły wyłączony),
+  `QUICK_TAP_TERM 120` (stuknięcie i przytrzymanie w ciągu 120 ms powtarza Enter, później to Shift),
+  `SPECULATIVE_HOLD` (Shift z `Ent*` działa od razu, np. Shift+klik). Celowo **bez** Flow Tap – zamieniałby „spacja, `Ent*`+litera” w Enter.
+  Do przetestowania w praktyce.
 - **Debounce `sym_defer_pk`, 5 ms**: osobno dla każdego klawisza; zmiana stanu jest wysyłana dopiero, gdy styk jest stabilny przez 5 ms. Próbowany `sym_eager_pk` (wysyłanie natychmiastowe) dawał podwójne wciśnięcia na A, 0 i P – przełączniki drgają przy puszczaniu.
 - **NKRO** włączone domyślnie – dowolna liczba jednocześnie wciśniętych klawiszy. Ustawienie startowe zapisuje się w EEPROM; po wgraniu metodą „trzymaj górny klawisz przy podłączaniu” EEPROM jest czyszczony i NKRO włącza się samo.
 - **Bootmagic**: trzymanie lewego górnego klawisza (lewa) lub prawego górnego (prawa) podczas podłączania USB → bootloader.

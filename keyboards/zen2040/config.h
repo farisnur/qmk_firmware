@@ -26,7 +26,10 @@
 #define OLED_FONT_H "glcdfont.c"
 #define OLED_TIMEOUT 60000
 
-// Power budget: 2 x 34 LEDs are fed from one USB port (0.5-0.9 A), and the
-// far half's share flows through the TRRS contacts. ~120/255 keeps full white
-// around 1 A worst case; colored effects draw far less.
-#define RGBLIGHT_LIMIT_VAL 120
+// RGB Matrix: 2 x 31 LEDs, map in zen2040.c (g_led_config).
+// Power budget: all LEDs are fed from one USB port (0.5-0.9 A) and the far
+// half's share flows through the TRRS contacts, hence max_brightness 120/255
+// in keyboard.json (full white ~1 A worst case; colored effects draw far less).
+#define RGB_MATRIX_LED_COUNT 62
+#define RGB_MATRIX_KEYPRESSES
+#define RGB_MATRIX_FRAMEBUFFER_EFFECTS

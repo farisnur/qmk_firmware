@@ -83,6 +83,41 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
+#ifdef RGB_MATRIX_ENABLE
+// Indicators drawn on top of any effect:
+//  - Caps Lock: Caps key white
+//  - NAV layer: arrow keys white, media keys cyan
+static void light_key(uint8_t row, uint8_t col, uint8_t r, uint8_t g, uint8_t b, uint8_t led_min, uint8_t led_max) {
+  uint8_t i = g_led_config.matrix_co[row][col];
+  if (i != NO_LED && i >= led_min && i < led_max) {
+    rgb_matrix_set_color(i, r, g, b);
+  }
+}
+
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+  const uint8_t v = rgb_matrix_get_val();
+  if (host_keyboard_led_state().caps_lock) {
+    light_key(2, 0, v, v, v, led_min, led_max);
+  }
+  if (get_highest_layer(layer_state) == _NAV) {
+    // right half, matrix rows 5-9 (col 0 = outer edge)
+    static const uint8_t arrows[][2] = {
+      {6, 3},                  // Up    (I)
+      {7, 4}, {7, 3}, {7, 2},  // Left, Down, Right (J K L)
+      {9, 3}, {9, 2}, {9, 1}, {9, 0},  // Left, Down, Up, Right (bottom row)
+    };
+    for (uint8_t k = 0; k < ARRAY_SIZE(arrows); k++) {
+      light_key(arrows[k][0], arrows[k][1], v, v, v, led_min, led_max);
+    }
+    static const uint8_t media[][2] = {{8, 2}, {8, 1}, {8, 0}};  // Play, Prev, Next
+    for (uint8_t k = 0; k < ARRAY_SIZE(media); k++) {
+      light_key(media[k][0], media[k][1], 0, v, v, led_min, led_max);
+    }
+  }
+  return false;
+}
+#endif
+
 #ifdef OLED_ENABLE
 #include "hamster.h"
 

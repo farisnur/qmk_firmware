@@ -16,9 +16,9 @@
         "extrakey": true,
         "mousekey": true,
         "nkro": true,
-        "rgblight": true,
         "oled": true,
-        "os_detection": true
+        "os_detection": true,
+        "rgb_matrix": true
     },
     "matrix_pins": {
         "cols": [
@@ -42,8 +42,8 @@
     "encoder": {
         "rotary": [
             {
-                "pin_a": "GP4",
-                "pin_b": "GP1"
+                "pin_a": "GP1",
+                "pin_b": "GP4"
             }
         ]
     },
@@ -64,30 +64,20 @@
                 "layer_state": true,
                 "indicators": true,
                 "modifiers": true,
-                "oled": true
+                "oled": true,
+                "matrix_state": true
             },
             "watchdog": true
-        }
-    },
-    "rgblight": {
-        "led_count": 68,
-        "split": true,
-        "split_count": [
-            34,
-            34
-        ],
-        "sleep": true,
-        "animations": {
-            "breathing": true,
-            "rainbow_mood": true,
-            "rainbow_swirl": true,
-            "snake": true,
-            "knight": true,
-            "christmas": true,
-            "static_gradient": true,
-            "rgb_test": true,
-            "alternating": true,
-            "twinkle": true
+        },
+        "encoder": {
+            "right": {
+                "rotary": [
+                    {
+                        "pin_a": "GP4",
+                        "pin_b": "GP1"
+                    }
+                ]
+            }
         }
     },
     "ws2812": {
@@ -100,7 +90,42 @@
         }
     },
     "build": {
-        "debounce_type": "sym_eager_pk"
+        "debounce_type": "sym_defer_pk"
+    },
+    "rgb_matrix": {
+        "driver": "ws2812",
+        "split_count": [
+            31,
+            31
+        ],
+        "max_brightness": 120,
+        "sleep": true,
+        "react_on_keyup": false,
+        "animations": {
+            "breathing": true,
+            "cycle_left_right": true,
+            "cycle_out_in_dual": true,
+            "rainbow_moving_chevron": true,
+            "cycle_spiral": true,
+            "rainbow_beacon": true,
+            "pixel_fractal": true,
+            "pixel_rain": true,
+            "flower_blooming": true,
+            "riverflow": true,
+            "starlight_smooth": true,
+            "typing_heatmap": true,
+            "digital_rain": true,
+            "solid_reactive_simple": true,
+            "solid_reactive_multiwide": true,
+            "solid_reactive_multinexus": true,
+            "multisplash": true,
+            "solid_multisplash": true
+        },
+        "default": {
+            "hue": 150,
+            "val": 120,
+            "speed": 96
+        }
     },
     "layouts": {
         "LAYOUT": {

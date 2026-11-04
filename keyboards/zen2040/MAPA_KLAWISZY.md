@@ -85,7 +85,18 @@ Na OLED-zie połówki z kablem USB widać nazwę aktywnej warstwy (`QWRTY` / `NA
 
 Poza NAV: `RGBon` włącza/wyłącza diody, `RGB<` / `RGB>` (klawisze przy B i N) przełączają efekty.
 
-Dostępne efekty (kolejno): stały kolor → oddychanie → rainbow mood → rainbow swirl → snake → knight → christmas → gradient → test RGB → alternating → twinkle.
+Efekty (RGB Matrix): start na **Aurora**. Własne efekty są **na końcu listy** – najszybciej `RGB<` od stałego koloru:
+
+| Efekt | Co robi | Prędkość / Odcień |
+|---|---|---|
+| **Aurora** | płynąca zorza na obu połówkach, jaśnieje przy szybkim pisaniu | dryf / kolor bazowy |
+| **Embers** | klawisze rozgrzewają się przy pisaniu i stygną jak żar | stygnięcie / – |
+| **Comet** | z każdego wciśnięcia lecą komety w lewo i prawo | prędkość / kolor tła |
+
+Wbudowane: stały kolor, oddychanie, cykle tęczy (lewo-prawo, chevron, spirala, beacon), flower blooming, pixel rain/fractal, **typing heatmap**, **digital rain**, reaktywne (simple, multiwide, multinexus), splash, starlight, riverflow.
+
+Wskaźniki: **Caps Lock** – klawisz `Caps*` świeci na biało. **NAV** – strzałki na biało, Play/Prev/Next na turkusowo.
+Prędkość efektu w QMK nie ma osobnego klawisza w tej keymapie (do dodania przy pracy nad mapą klawiszy).
 Ustawienia RGB zapamiętują się po odłączeniu. Gdy komputer śpi, diody gasną.
 
 ## Pokrętła (enkodery)

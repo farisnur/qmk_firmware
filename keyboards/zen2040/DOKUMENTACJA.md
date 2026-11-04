@@ -23,14 +23,14 @@ Mapa klawiszy i skróty: [MAPA_KLAWISZY.md](MAPA_KLAWISZY.md).
 | PCB | RGBKB Zen rev2, dwie połówki |
 | Mikrokontroler | klon RP2040 „Pro Micro” (raster i rozkład pinów jak Pro Micro), osobny w każdej połówce |
 | Połączenie połówek | kabel TRRS, **jeden przewód danych** (half-duplex serial) |
-| Matryca | 5 rzędów × 7 kolumn na połówkę, diody COL2ROW, 34 klawisze na połówkę |
-| Podświetlenie | 34 diody WS2812 na połówkę (pod każdym klawiszem) |
+| Matryca | 5 rzędów × 7 kolumn na połówkę (34 pozycje), diody COL2ROW; obsadzone 32 klawisze (w tym podwójny klawisz kciuka) |
+| Podświetlenie | 31 adresów WS2812 na połówkę: 29 pod klawiszami + 2 pary pod kciukiem (każda para świeci jak jedna dioda); pod klawiszem przy pokrętle brak diody |
 | Wyświetlacze | OLED SSD1306 128×32 (I2C, adres `0x3C`), po jednym na połówkę, zamontowane pionowo |
 | Enkodery | po jednym pokrętle na połówkę |
 
 ### Przeróbki względem oryginału
 - **Diody:** w oryginalnym Zenie sygnał danych diod szedł przez TRRS (jeden łańcuch przez obie połówki).
-  To połączenie zostało usunięte – **każda połówka steruje swoimi 34 diodami z własnego RP2040**.
+  To połączenie zostało usunięte – **każda połówka steruje swoimi 31 diodami z własnego RP2040**.
   Efekty i kolory są synchronizowane programowo przez ten sam przewód, którym idą klawisze.
 - **OLED:** linie SDA/SCL wyświetlacza trafiają na zamienione piny RP2040 (szczegóły w [sekcji 8](#8-historia-i-znane-problemy)).
 
@@ -44,7 +44,7 @@ Mapowanie Pro Micro → RP2040 (identyczne na obu połówkach):
 |---|---|---|
 | Kolumny 0–6 | F4, F5, F6, F7, B3, B1, B2 | GP29, GP28, GP27, GP26, GP20, GP22, GP23 |
 | Rzędy 0–4 | C6, E6, B5, D7, B4 | GP5, GP7, GP9, GP6, GP8 |
-| Enkoder A / B | D4 / D2 | GP4 / GP1 |
+| Enkoder A / B | D4 / D2 | GP4 / GP1 (prawa); lewa ma A/B zamienione – GP1 / GP4 – bo pokrętło jest tam wlutowane odwrotnie |
 | Komunikacja TRRS | D3 | GP0 |
 | Diody WS2812 | B6 | GP21 |
 | OLED SDA | – | **GP3** (patrz sekcja 8) |
@@ -64,15 +64,29 @@ Mapowanie Pro Micro → RP2040 (identyczne na obu połówkach):
 - **NAV** (1) – aktywna, dopóki trzymasz `Caps*` albo `NAV`. Zawiera F1–F12, strzałki (dwa zestawy: pod prawą ręką w stylu I/J/K/L oraz w prawym dolnym rogu), PgUp/PgDn/Home/Ins/Del, sterowanie RGB, multimedia i `BOOT`.
 - Skróty z podwójną funkcją: `Caps*` (stuknięcie Caps Lock / trzymanie NAV), `Ent*` (stuknięcie Enter / trzymanie prawy Shift), `Esc` (Grave Escape: z Shift `~`, z Cmd `` ` ``).
 
-### Podświetlenie RGB (rgblight)
-- 2 × 34 diody, obie połówki pokazują wspólny efekt.
-- Jasność ograniczona do 120/255 (`RGBLIGHT_LIMIT_VAL`). Powód: 68 diod zasilanych jest z jednego portu USB (0,5–0,9 A), a prąd drugiej połówki płynie przez styki TRRS. Przy 120 pełna biel to ok. 1 A w najgorszym razie; efekty kolorowe biorą dużo mniej.
-- Efekty: stały, oddychanie, rainbow mood, rainbow swirl, snake, knight, christmas, gradient, test RGB, alternating, twinkle.
-- Diody gasną, gdy komputer przechodzi w uśpienie.
-- Ustawienia (efekt, kolor, jasność) zapisują się w EEPROM.
+### Podświetlenie RGB (RGB Matrix)
+- **RGB Matrix**: każda dioda ma swoją pozycję na klawiaturze, więc efekty mogą reagować na wciśnięcia i rozchodzić się po obu połówkach.
+- 2 × 31 diod. Mapa dioda ↔ klawisz (`g_led_config` w `zen2040.c`) została **zmierzona** keymapą `ledtest` (sekcja 7):
+  na każdej połówce diody 0–28 idą rząd po rzędzie od zewnętrznej krawędzi, 29 = para pod lewą kolumną kciuka, 30 = para pod prawą kolumną kciuka.
+  Oba klawisze z pary kciuka są przypisane do tej samej diody.
+- Jasność maks. 120/255 (`rgb_matrix.max_brightness`). Powód: wszystkie diody zasilane są z jednego portu USB (0,5–0,9 A), a prąd drugiej połówki płynie przez styki TRRS. Przy 120 pełna biel to ok. 1 A w najgorszym razie; efekty kolorowe biorą dużo mniej.
+- Efekt startowy: **Aurora**. Ustawienia (efekt, kolor, jasność, prędkość) zapisują się w EEPROM. Gdy komputer śpi, diody gasną.
+
+**Efekty wbudowane QMK** (włączone): stały kolor, oddychanie, cycle left-right, cycle out-in dual, rainbow chevron, cycle spiral, rainbow beacon, flower blooming, pixel rain, pixel fractal, typing heatmap, digital rain, solid reactive (simple / multiwide / multinexus), multisplash, solid multisplash, starlight smooth, riverflow.
+
+**Efekty własne** (`keymaps/default/rgb_matrix_user.inc`, na końcu listy – najszybciej przez `RGB<`):
+
+| Efekt | Opis | Prędkość | Odcień |
+|---|---|---|---|
+| **Aurora** | dwie nakładające się fale światła płyną przez obie połówki; im szybciej piszesz (WPM), tym jaśniej i bardziej nasycone | tempo dryfu | kolor bazowy (±48) |
+| **Embers** | każde wciśnięcie rozgrzewa klawisz i okolicę; żar stygnie przez czerwień → pomarańcz → żółć → biel; w spoczynku pojedyncze iskry | tempo stygnięcia | – (paleta ognia) |
+| **Comet** | z wciśniętego klawisza wylatują dwie komety w lewo i prawo wzdłuż rzędu, przez obie połówki; każdy klawisz ma swój kolor | prędkość komet | kolor bazowy i tła |
+
+**Wskaźniki** (rysowane na każdym efekcie, `keymap.c`): Caps Lock → klawisz `Caps*` na biało; warstwa NAV → strzałki na biało, multimedia (Play/Prev/Next) na turkusowo.
 
 ### Enkodery
 Zdefiniowane jako *encoder map* (zależne od warstwy): QWERTY – lewy przewija, prawy zmienia głośność; NAV – lewy odcień, prawy nasycenie RGB.
+Rozdzielczość domyślna (4 impulsy na ząbek) – zmierzona: jeden ząbek = jeden krok. Kierunek lewego poprawiony zamianą pinów A/B (patrz tabela pinów).
 
 ### OLED
 - **Master** (połówka z USB): ikona systemu wykrytego automatycznie (Apple / Windows / Linux / inne), nazwa warstwy, wskaźniki NUMLK / CAPLK / SCRLK.
@@ -85,7 +99,7 @@ Zdefiniowane jako *encoder map* (zależne od warstwy): QWERTY – lewy przewija,
 - Ekrany gasną po 60 s bez aktywności (`OLED_TIMEOUT`), odświeżanie co 50 ms.
 
 ### Inne
-- **Debounce `sym_eager_pk`, 5 ms**: wciśnięcie wysyłane natychmiast, dopiero potem ignorowane drgania styku (domyślne QMK czeka 5 ms przed wysłaniem).
+- **Debounce `sym_defer_pk`, 5 ms**: osobno dla każdego klawisza; zmiana stanu jest wysyłana dopiero, gdy styk jest stabilny przez 5 ms. Próbowany `sym_eager_pk` (wysyłanie natychmiastowe) dawał podwójne wciśnięcia na A, 0 i P – przełączniki drgają przy puszczaniu.
 - **NKRO** włączone domyślnie – dowolna liczba jednocześnie wciśniętych klawiszy. Ustawienie startowe zapisuje się w EEPROM; po wgraniu metodą „trzymaj górny klawisz przy podłączaniu” EEPROM jest czyszczony i NKRO włącza się samo.
 - **Bootmagic**: trzymanie lewego górnego klawisza (lewa) lub prawego górnego (prawa) podczas podłączania USB → bootloader.
 - **Podwójny reset**: dwa szybkie resety w ciągu 500 ms → bootloader.
@@ -99,10 +113,10 @@ Stare repo tylko do wglądu: `~/Projects/QMK firmware/qmk_old`.
 
 ```
 keyboards/zen2040/
-├── keyboard.json          sprzęt: piny, matryca, RGB, split, układ klawiszy
+├── keyboard.json          sprzęt: piny, matryca, RGB Matrix, split, układ klawiszy
 ├── config.h               EE_HANDS, wykrywanie USB, watchdog, piny OLED, limit jasności
 ├── rules.mk               własny transport OLED (programowe I2C)
-├── zen2040.c              ekran statusu mastera (ikona systemu, warstwa, locki)
+├── zen2040.c              mapa diod (g_led_config) i ekran statusu mastera
 ├── oled_sw_i2c.c          programowe I2C dla OLED (obejście zamienionych pinów)
 ├── glcdfont.c             font OLED (z ikonami systemów, pochodzi z rgbkb/zen)
 ├── build.sh               buduje oba pliki .uf2
@@ -110,11 +124,13 @@ keyboards/zen2040/
 ├── DOKUMENTACJA.md        ten plik
 └── keymaps/
     ├── default/
-    │   ├── keymap.c       warstwy, enkodery, nazwy warstw na OLED
+    │   ├── keymap.c       warstwy, enkodery, wskaźniki RGB, nazwy warstw na OLED
+    │   ├── rgb_matrix_user.inc  własne efekty: Aurora, Embers, Comet
     │   ├── hamster.c/.h   animacja chomika
-    │   ├── config.h       synchronizacja WPM, odświeżanie OLED
+    │   ├── config.h       synchronizacja WPM, odświeżanie OLED, efekt startowy
     │   └── rules.mk       encoder map, WPM
-    └── diag/              keymapa diagnostyczna (skan I2C w konsoli)
+    ├── diag/              diagnostyka: skan I2C w konsoli
+    └── ledtest/           diagnostyka: kolejność diod i impulsy pokręteł
 ```
 
 Gotowe pliki do wgrania: `~/Projects/QMK firmware/firmware_out/zen2040_left.uf2` i `zen2040_right.uf2`.
@@ -126,7 +142,10 @@ Gotowe pliki do wgrania: `~/Projects/QMK firmware/firmware_out/zen2040_left.uf2`
 | funkcje pokręteł | `encoder_map` w `keymaps/default/keymap.c` |
 | wygląd ekranu mastera | `zen2040.c` (`render_status`) |
 | animację chomika, skalę wykresu | `keymaps/default/hamster.c` (stałe na górze pliku) |
-| efekty RGB, liczbę diod | `keyboard.json` → `rgblight` |
+| włączone efekty, jasność maks. | `keyboard.json` → `rgb_matrix` |
+| własne efekty | `keymaps/default/rgb_matrix_user.inc` |
+| mapa diod | `zen2040.c` → `g_led_config` |
+| wskaźniki (Caps, NAV) | `keymaps/default/keymap.c` → `rgb_matrix_indicators_advanced_user` |
 | maks. jasność, czas gaszenia OLED | `config.h` |
 
 ## 5. Kompilacja
@@ -172,7 +191,9 @@ Po zmianie samej keymapy można wgrywać te same pliki `_left`/`_right` – nic 
 | OLED czarny | Po 60 s bez pisania gaśnie – naciśnij klawisz. Jeśli dalej czarny: keymapa `diag` (sekcja niżej). |
 | Ikona złego systemu | Odłącz i podłącz USB – wykrywanie działa tylko przy podłączeniu. |
 | Diody migają / pierwsza dioda dziwnie | RP2040 daje sygnał 3,3 V, a diody działają na 5 V – na granicy tolerancji. Ewentualnie konwerter poziomów lub dioda „poświęcona” jako bufor. |
-| Część diod nie świeci | Sprawdź lutowanie. Jeśli diod jest mniej niż 34 na stronę – zmień `split_count` w `keyboard.json`. |
+| Część diod nie świeci | Sprawdź lutowanie. Dioda z uszkodzonym świeceniem zwykle dalej przekazuje sygnał, więc kolejne świecą. Potwierdź keymapą `ledtest`. |
+| Podwójne litery | Drgający przełącznik. Debounce to `sym_defer_pk` 5 ms; można podnieść `DEBOUNCE` lub wymienić przełącznik. |
+| Pokrętło kręci odwrotnie | Zamień `pin_a`/`pin_b` tej połówki w `keyboard.json` (`encoder` = lewa, `split.encoder.right` = prawa). |
 | Firmware nie startuje po wgraniu | Wejdź w bootloader i wgraj ponownie. |
 
 ### Diagnostyka (keymapa `diag`)
@@ -185,13 +206,24 @@ qmk console
 ```
 Poprawny wynik: `0x3C` w jednym z wariantów. Po diagnostyce wgraj z powrotem normalny firmware.
 
+### Kolejność diod i pokrętła (keymapa `ledtest`)
+Zapala po jednej diodzie (numer na OLED-zie); wciśnij klawisz, pod którym świeci. Pokrętło: jeden ząbek w prawo = pomiń diodę, w lewo = cofnij (na obu połówkach). Każdy impuls pokrętła jest logowany.
+
+```bash
+qmk compile -kb zen2040 -km ledtest -e TARGET=zen2040_ledtest_left -e EXTRAFLAGS=-DINIT_EE_HANDS_LEFT
+qmk compile -kb zen2040 -km ledtest -e TARGET=zen2040_ledtest_right -e EXTRAFLAGS=-DINIT_EE_HANDS_RIGHT
+# wgraj na jedną połówkę (bez TRRS), potem:
+qmk console
+```
+Wynik: linie `[led] N -> row,col` i na koniec pełna lista. Wejście w bootloader z tego firmware: trzymaj skrajny górny klawisz przy podłączaniu USB.
+
 ## 8. Historia i znane problemy
 
 ### Co nie działało w starej wersji (stare repo, styczeń 2025)
 1. **Enkodery i OLED wyłączone** – `rgbkb/zen/rules.mk` miał `ENCODER_ENABLE = no` i `OLED_ENABLE = no`, co nadpisywało ustawienia z `keyboard.json`.
 2. **Brak konfiguracji I2C** dla RP2040.
 3. **Sprzeczne ustawienia strony** – jednocześnie `EE_HANDS` i `MASTER_LEFT`, a obie połówki dostawały ten sam plik. W efekcie prawa myślała, że jest lewą.
-4. **RGB bez podziału na połówki** – brak synchronizacji efektów.
+4. **RGB bez podziału na połówki** – brak synchronizacji efektów; do tego założone 34 diody zamiast faktycznych 31.
 5. **`RP2040_FLASH_W25X10CL`** – ustawienie dla innej kości pamięci flash; usunięte.
 6. Przestarzałe kody `RGB_MOD/VAI/VAD` → zamienione na `UG_*`.
 
@@ -209,3 +241,5 @@ Działa poprawnie; jedyna wada to minimalnie większe obciążenie procesora prz
   4. dodać `halconf.h` (`#define HAL_USE_I2C TRUE` + `#include_next <halconf.h>`) i `mcuconf.h` (`#include_next <mcuconf.h>`, `#undef RP_I2C_USE_I2C1`, `#define RP_I2C_USE_I2C1 TRUE`),
   5. usunąć keymapę `diag`, zbudować i wgrać obie połówki.
 - [ ] Rozważyć konwerter poziomów 3,3 V → 5 V dla linii danych diod, jeśli pojawią się problemy z RGB.
+- [ ] Potwierdzić diody pod **9**, **O** i **'** na prawej połówce (w teście przeskoczone przez podwójne wciśnięcia; mapa przyjęta z symetrii z lewą).
+- [ ] Dalsza praca nad efektami RGB.

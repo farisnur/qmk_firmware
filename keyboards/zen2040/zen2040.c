@@ -43,43 +43,41 @@ __attribute__((weak)) const char *layer_name_user(uint8_t layer) {
     return PSTR("?????");
 }
 
-// Host OS icon: 2 x 2 glyphs from glcdfont.c
+#    include "os_icons.h"
+
+// Host OS icon: 32 x 32 px bitmap across the full display width (lines 0-3).
 static void render_os_icon(void) {
-    static const char PROGMEM icons[4][2][3] = {
-        {{0x95, 0x96, 0}, {0xb5, 0xb6, 0}}, // Apple
-        {{0x97, 0x98, 0}, {0xb7, 0xb8, 0}}, // Windows
-        {{0x99, 0x9a, 0}, {0xb9, 0xba, 0}}, // Linux
-        {{0x9b, 0x9c, 0}, {0xbb, 0xbc, 0}}, // other
-    };
-    uint8_t os = 3;
+    const uint32_t *icon = icon_other;
 #    ifdef OS_DETECTION_ENABLE
     switch (detected_host_os()) {
         case OS_MACOS:
         case OS_IOS:
-            os = 0;
+            icon = icon_apple;
             break;
         case OS_WINDOWS:
-            os = 1;
+            icon = icon_windows;
             break;
         case OS_LINUX:
-            os = 2;
+            icon = icon_linux;
             break;
         default:
             break;
     }
 #    endif
-    oled_set_cursor(0, 0);
-    oled_write_P(icons[os][0], false);
-    oled_set_cursor(0, 1);
-    oled_write_P(icons[os][1], false);
+    for (uint8_t y = 0; y < 32; y++) {
+        uint32_t row = pgm_read_dword(&icon[y]);
+        for (uint8_t x = 0; x < 32; x++) {
+            oled_write_pixel(x, y, row & (1UL << (31 - x)));
+        }
+    }
 }
 
 __attribute__((weak)) void render_status(void) {
     render_os_icon();
 
-    oled_set_cursor(0, 3);
+    oled_set_cursor(0, 5);
     oled_write_P(PSTR("Layer"), false);
-    oled_set_cursor(0, 4);
+    oled_set_cursor(0, 6);
     oled_write_P(layer_name_user(get_highest_layer(layer_state | default_layer_state)), false);
 
     led_t leds = host_keyboard_led_state();
